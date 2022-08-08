@@ -64,6 +64,10 @@
 	};
 };
 
+&ir {
+	linux,rc-map-name = "rc-beelink-gs1";
+};
+
 &sd_emmc_a {
 	/* QCA9377 WiFi */
 	wifi: wifi@1 {

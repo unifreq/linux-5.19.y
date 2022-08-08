@@ -64,6 +64,10 @@
 	};
 };
 
+&ir {
+	linux,rc-map-name = "rc-beelink-gs1";
+};
+
 &sd_emmc_a {
 	brcmf: wifi@1 {
 		reg = <1>;
