@@ -336,7 +336,7 @@ static int cedrus_open(struct file *file)
 		goto err_ctrls;
 	}
 	ctx->dst_fmt.pixelformat = V4L2_PIX_FMT_NV12_32L32;
-	cedrus_prepare_format(&ctx->dst_fmt);
+	cedrus_prepare_format(&ctx->dst_fmt, 0);
 	ctx->src_fmt.pixelformat = V4L2_PIX_FMT_MPEG2_SLICE;
 	/*
 	 * TILED_NV12 has more strict requirements, so copy the width and
@@ -344,7 +344,7 @@ static int cedrus_open(struct file *file)
 	 */
 	ctx->src_fmt.width = ctx->dst_fmt.width;
 	ctx->src_fmt.height = ctx->dst_fmt.height;
-	cedrus_prepare_format(&ctx->src_fmt);
+	cedrus_prepare_format(&ctx->src_fmt, 0);
 
 	v4l2_fh_add(&ctx->fh);
 
@@ -618,6 +618,15 @@ static const struct cedrus_variant sun50i_h6_cedrus_variant = {
 	.mod_rate	= 600000000,
 };
 
+static const struct cedrus_variant sun50i_h616_cedrus_variant = {
+	.capabilities	= CEDRUS_CAPABILITY_UNTILED |
+			  CEDRUS_CAPABILITY_MPEG2_DEC |
+			  CEDRUS_CAPABILITY_H264_DEC |
+			  CEDRUS_CAPABILITY_H265_DEC |
+			  CEDRUS_CAPABILITY_VP8_DEC,
+	.mod_rate	= 600000000,
+};
+
 static const struct of_device_id cedrus_dt_match[] = {
 	{
 		.compatible = "allwinner,sun4i-a10-video-engine",
@@ -661,6 +670,10 @@ static const struct of_device_id cedrus_dt_match[] = {
 	},
 	{
 		.compatible = "allwinner,sun50i-h6-video-engine",
+		.data = &sun50i_h6_cedrus_variant,
+	},
+	{
+		.compatible = "allwinner,sun50i-h616-video-engine",
 		.data = &sun50i_h6_cedrus_variant,
 	},
 	{ /* sentinel */ }

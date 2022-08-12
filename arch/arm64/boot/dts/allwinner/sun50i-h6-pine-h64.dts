@@ -81,6 +81,10 @@
 	};
 };
 
+&dwc3 {
+	status = "okay";
+};
+
 &cpu0 {
 	cpu-supply = <&reg_dcdca>;
 };
@@ -330,5 +334,10 @@
 &usb2phy {
 	usb0_vbus-supply = <&reg_usb_vbus>;
 	usb3_vbus-supply = <&reg_usb_vbus>;
+	status = "okay";
+};
+
+&usb3phy {
+	phy-supply = <&reg_usb_vbus>;
 	status = "okay";
 };

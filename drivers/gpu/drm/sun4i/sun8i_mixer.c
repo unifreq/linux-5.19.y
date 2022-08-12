@@ -588,6 +588,14 @@ static const struct sun8i_mixer_cfg sun8i_h3_mixer0_cfg = {
 	.vi_num		= 1,
 };
 
+static const struct sun8i_mixer_cfg sun8i_h3_mixer1_cfg = {
+	.ccsc		= CCSC_MIXER1_LAYOUT,
+	.mod_rate	= 432000000,
+	.scaler_mask	= 0xf,
+	.ui_num		= 3,
+	.vi_num		= 1,
+};
+
 static const struct sun8i_mixer_cfg sun8i_r40_mixer0_cfg = {
 	.ccsc		= CCSC_MIXER0_LAYOUT,
 	.mod_rate	= 297000000,
@@ -673,6 +681,10 @@ static const struct of_device_id sun8i_mixer_of_table[] = {
 	{
 		.compatible = "allwinner,sun8i-h3-de2-mixer-0",
 		.data = &sun8i_h3_mixer0_cfg,
+	},
+	{
+		.compatible = "allwinner,sun8i-h3-de2-mixer-1",
+		.data = &sun8i_h3_mixer1_cfg,
 	},
 	{
 		.compatible = "allwinner,sun8i-r40-de2-mixer-0",
