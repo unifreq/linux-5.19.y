@@ -431,6 +431,7 @@ struct brcmf_fw {
 	struct brcmf_fw_request *req;
 	u32 curpos;
 	void (*done)(struct device *dev, int err, struct brcmf_fw_request *req);
+	struct completion *completion;
 };
 
 #ifdef CONFIG_EFI
@@ -655,6 +656,8 @@ static void brcmf_fw_request_done(const struct firmware *fw, void *ctx)
 		fwctx->req = NULL;
 	}
 	fwctx->done(fwctx->dev, ret, fwctx->req);
+	if (fwctx->completion)
+		complete(fwctx->completion);
 	kfree(fwctx);
 }
 
@@ -695,6 +698,8 @@ int brcmf_fw_get_firmwares(struct device *dev, struct brcmf_fw_request *req,
 {
 	struct brcmf_fw_item *first = &req->items[0];
 	struct brcmf_fw *fwctx;
+	struct completion completion;
+	unsigned long time_left;
 	char *alt_path = NULL;
 	int ret;
 
@@ -712,6 +717,9 @@ int brcmf_fw_get_firmwares(struct device *dev, struct brcmf_fw_request *req,
 	fwctx->dev = dev;
 	fwctx->req = req;
 	fwctx->done = fw_cb;
+ 
+	init_completion(&completion);
+	fwctx->completion = &completion;
 
 	/* First try alternative board-specific path if any */
 	if (fwctx->req->board_type)
@@ -729,6 +737,12 @@ int brcmf_fw_get_firmwares(struct device *dev, struct brcmf_fw_request *req,
 	}
 	if (ret < 0)
 		brcmf_fw_request_done(NULL, fwctx);
+
+
+	time_left = wait_for_completion_timeout(&completion,
+						msecs_to_jiffies(5000));
+	if (!time_left && fwctx)
+		fwctx->completion = NULL;
 
 	return 0;
 }
