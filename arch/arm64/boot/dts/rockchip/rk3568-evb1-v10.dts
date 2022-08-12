@@ -635,3 +635,7 @@
 	phy-supply = <&vcc5v0_usb_host>;
 	status = "okay";
 };
+
+&rng {
+	status = "okay";
+};

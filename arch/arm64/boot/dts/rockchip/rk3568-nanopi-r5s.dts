@@ -819,3 +819,7 @@
 		remote-endpoint = <&hdmi_in_vp0>;
 	};
 };
+
+&rng {
+	status = "okay";
+};

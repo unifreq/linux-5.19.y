@@ -677,3 +677,7 @@
 &usb2phy1_otg {
 	status = "okay";
 };
+
+&rng {
+	status = "okay";
+};
