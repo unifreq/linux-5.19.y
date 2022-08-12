@@ -20,9 +20,11 @@ properties:
     oneOf:
       - const: rockchip,rk3288-rga
       - const: rockchip,rk3399-rga
+      - const: rockchip,rk356x-rga
       - items:
           - const: rockchip,rk3228-rga
           - const: rockchip,rk3288-rga
+          - const: rockchip,rk356x-rga
 
   reg:
     maxItems: 1

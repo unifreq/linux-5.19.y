@@ -4,6 +4,7 @@
  */
 
 /dts-v1/;
+#include "rk3328-dram-renegade-timing.dtsi"
 #include "rk3328.dtsi"
 
 / {
@@ -17,6 +18,32 @@
 
 	chosen {
 		stdout-path = "serial2:1500000n8";
+	};
+
+	/delete-node/ dmc-opp-table;
+	dmc_opp_table: dmc-opp-table {
+		compatible = "operating-points-v2";
+
+		opp-786000000 {
+			opp-hz = /bits/ 64 <786000000>;
+			opp-microvolt = <1075000 1075000 12000000>;
+		};
+		opp-798000000 {
+			opp-hz = /bits/ 64 <798000000>;
+			opp-microvolt = <1075000 1075000 12000000>;
+		};
+		opp-840000000 {
+			opp-hz = /bits/ 64 <840000000>;
+			opp-microvolt = <1075000 1075000 12000000>;
+		};
+		opp-924000000 {
+			opp-hz = /bits/ 64 <924000000>;
+			opp-microvolt = <1100000 1100000 12000000>;
+		};
+		opp-1068000000 {
+			opp-hz = /bits/ 64 <1068000000>;
+			opp-microvolt = <1175000 1175000 12000000>;
+		};
 	};
 
 	gmac_clkin: external-gmac-clock {
@@ -116,6 +143,17 @@
 &codec {
 	status = "okay";
 };
+
+&dfi {
+	status = "okay";
+};
+
+&dmc {
+	center-supply = <&vdd_logic>;
+	ddr_timing = <&ddr_timing>;
+	status = "okay";
+};
+
 
 &cpu0 {
 	cpu-supply = <&vdd_arm>;
