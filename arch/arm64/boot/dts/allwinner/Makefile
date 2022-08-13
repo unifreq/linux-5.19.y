@@ -45,3 +45,5 @@ dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h6-tanix-tx6.dtb
 dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h6-tanix-tx6-mini.dtb
 dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h6-vplus-cloud.dtb
 dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h6-vplus-cloud-2ghz.dtb
+
+subdir-y       := $(dts-dirs) overlay
