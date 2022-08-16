@@ -456,7 +456,7 @@
 };
 
 &rng {
-	status = "okay";
+	status = "disabled";
 };
 
 &saradc {

@@ -655,7 +655,7 @@
 //};
 
 &rng {
- 	status = "okay";
+ 	status = "disabled";
 };
 
 //&dfi {
