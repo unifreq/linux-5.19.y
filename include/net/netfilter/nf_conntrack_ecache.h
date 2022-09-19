@@ -127,9 +127,14 @@ nf_conntrack_event_report(enum ip_conntrack_events event, struct nf_conn *ct,
 {
 #ifdef CONFIG_NF_CONNTRACK_EVENTS
 #ifndef CONFIG_NF_CONNTRACK_CHAIN_EVENTS
-	if (nf_ct_ecache_exist(ct))
-		return nf_conntrack_eventmask_report(1 << event, ct, portid, report);
+	const struct net *net = nf_ct_net(ct);
+
+	if (!rcu_access_pointer(net->ct.nf_conntrack_event_cb))
+		return 0;
 #endif
+
+	return nf_conntrack_eventmask_report(1 << event, ct, portid, report);
+#else
 	return 0;
 #endif
 }
@@ -139,9 +144,14 @@ nf_conntrack_event(enum ip_conntrack_events event, struct nf_conn *ct)
 {
 #ifdef CONFIG_NF_CONNTRACK_EVENTS
 #ifndef CONFIG_NF_CONNTRACK_CHAIN_EVENTS
-	if (nf_ct_ecache_exist(ct))
-		return nf_conntrack_eventmask_report(1 << event, ct, 0, 0);
+	const struct net *net = nf_ct_net(ct);
+
+	if (!rcu_access_pointer(net->ct.nf_conntrack_event_cb))
+		return 0;
 #endif
+
+	return nf_conntrack_eventmask_report(1 << event, ct, 0, 0);
+#else
 	return 0;
 #endif
 }
