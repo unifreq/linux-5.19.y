@@ -381,7 +381,7 @@
 	reset-gpios = <&gpio0 RK_PC3 GPIO_ACTIVE_HIGH>;
 	vpcie3v3-supply = <&vcc3v3_pcie>;
 	status = "okay";
-/*
+
 	pcie@0,0 {
 		reg = <0x00100000 0 0 0 0>;
 		#address-cells = <3>;
@@ -394,7 +394,6 @@
 			realtek,led-data = <0x4078>;
 		};
 	};
-*/
 };
 
 &pcie3x2 {
@@ -402,7 +401,7 @@
 	reset-gpios = <&gpio0 RK_PC6 GPIO_ACTIVE_HIGH>;
 	vpcie3v3-supply = <&vcc3v3_pcie>;
 	status = "okay";
-/*
+
 	pcie@0,0 {
 		reg = <0x00200000 0 0 0 0>;
 		#address-cells = <3>;
@@ -415,7 +414,6 @@
 			realtek,led-data = <0x4078>;
 		};
 	};
-*/
 };
 
 &pinctrl {
