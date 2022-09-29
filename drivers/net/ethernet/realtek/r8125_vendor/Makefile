@@ -30,12 +30,12 @@
 #  US6,570,884, US6,115,776, and US6,327,625.
 ################################################################################
 
-CONFIG_SOC_LAN = y
+CONFIG_SOC_LAN = n
 ENABLE_REALWOW_SUPPORT = n
 ENABLE_DASH_SUPPORT = n
 ENABLE_DASH_PRINTER_SUPPORT = n
 CONFIG_DOWN_SPEED_100 = n
-CONFIG_ASPM = y
+CONFIG_ASPM = n
 ENABLE_S5WOL = y
 ENABLE_S5_KEEP_CURR_MAC = n
 ENABLE_EEE = n
