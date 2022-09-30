@@ -148,7 +148,7 @@ do { \
 #ifdef CONFIG_R8125_NAPI
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,19,0)
 #undef RTL_ALLOC_SKB_INTR
-#define RTL_ALLOC_SKB_INTR(napi, length) napi_alloc_skb(napi, length)
+#define RTL_ALLOC_SKB_INTR(napi, length) __napi_alloc_skb(napi, length, GFP_ATOMIC)
 #endif
 #endif
 
