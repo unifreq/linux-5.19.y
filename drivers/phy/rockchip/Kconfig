@@ -101,6 +101,14 @@ config PHY_ROCKCHIP_SNPS_PCIE3
 	help
 	  Enable this to support the Rockchip snps PCIe3 PHY.
 
+config PHY_ROCKCHIP_SNPS_PCIE3_FIRMWARE
+	bool "Enable the phy firmware patch"
+	default n
+	depends on PHY_ROCKCHIP_SNPS_PCIE3
+	help
+	  Enable the phy firmware patch (fw-d54d0eb).
+	  If unsure, say N.
+
 config PHY_ROCKCHIP_TYPEC
 	tristate "Rockchip TYPEC PHY Driver"
 	depends on OF && (ARCH_ROCKCHIP || COMPILE_TEST)
