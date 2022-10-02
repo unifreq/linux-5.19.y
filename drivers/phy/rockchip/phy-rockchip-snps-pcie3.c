@@ -1175,9 +1175,9 @@ static int rockchip_p3phy_rk3568_init(struct rockchip_p3phy_priv *priv)
 		     (0x1 << 14) | (0x1 << (14 + 16))); //sdram_ld_done
 
 	dev_info(&priv->phy->dev, "p3phy (fw-d54d0eb) initialized\n");
+#endif
 
 	return 0;
-#endif
 }
 
 static const struct rockchip_p3phy_ops rk3568_ops = {
