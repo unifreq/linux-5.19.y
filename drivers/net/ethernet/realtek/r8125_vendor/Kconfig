@@ -160,3 +160,10 @@ config R8125_PM_SUPPORT
 	  Enable PM Support.
 	  If unsure, say Y.
 
+config R8125_ZEROCOPY
+        bool "Use Zero Copy Tech"
+	default n
+        depends on R8125
+        help
+	  If unsure, say N.
+

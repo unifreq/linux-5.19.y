@@ -15039,6 +15039,13 @@ rtl8125_try_rx_copy(struct rtl8125_private *tp,
 
                 skb = RTL_ALLOC_SKB_INTR(&tp->r8125napi[ring->index].napi, pkt_size + RTK_RX_ALIGN);
                 if (skb) {
+#ifdef CONFIG_R8125_ZEROCOPY
+			ret = skb_zerocopy(skb, *sk_buff, pkt_size, skb_zerocopy_headlen(*sk_buff));
+			if(ret == 0) {
+				*sk_buff = skb;
+				rtl8125_mark_to_asic(tp, desc, rx_buf_sz);
+			}
+#else
                         u8 *data;
 
                         data = sk_buff[0]->data;
@@ -15050,6 +15057,7 @@ rtl8125_try_rx_copy(struct rtl8125_private *tp,
                         *sk_buff = skb;
                         rtl8125_mark_to_asic(tp, desc, rx_buf_sz);
                         ret = 0;
+#endif //#ifdef CONFIG_R8125_ZEROCOPY
                 }
         }
         return ret;
