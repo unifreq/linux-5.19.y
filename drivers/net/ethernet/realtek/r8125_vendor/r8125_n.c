@@ -91,6 +91,10 @@
 #include <linux/seq_file.h>
 #endif
 
+#ifdef ENABLE_RSS_SUPPORT
+#include "r8125_rss.h"
+#endif
+
 #define FIRMWARE_8125A_3	"rtl_nic/rtl8125a-3.fw"
 #define FIRMWARE_8125B_2	"rtl_nic/rtl8125b-2.fw"
 
@@ -4766,6 +4770,7 @@ rtl8125_vlan_rx_kill_vid(struct net_device *dev,
 }
 #endif //LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22)
 
+#if 0
 static int
 rtl8125_rx_vlan_skb(struct rtl8125_private *tp,
                     struct RxDesc *desc,
@@ -4791,6 +4796,7 @@ rtl8125_rx_vlan_skb(struct rtl8125_private *tp,
         rtl8125_clear_rx_desc_opts2(tp, desc);
         return ret;
 }
+#endif
 
 #else /* !CONFIG_R8125_VLAN */
 
@@ -15024,6 +15030,7 @@ rtl8125_rx_csum(struct rtl8125_private *tp,
         }
 }
 
+#if 0
 static inline int
 rtl8125_try_rx_copy(struct rtl8125_private *tp,
                     struct rtl8125_rx_ring *ring,
@@ -15054,7 +15061,9 @@ rtl8125_try_rx_copy(struct rtl8125_private *tp,
         }
         return ret;
 }
+#endif
 
+#if 0
 static inline void
 rtl8125_rx_skb(struct rtl8125_private *tp,
                struct sk_buff *skb,
@@ -15070,6 +15079,7 @@ rtl8125_rx_skb(struct rtl8125_private *tp,
         netif_rx(skb);
 #endif
 }
+#endif
 
 static int
 rtl8125_check_rx_desc_error(struct net_device *dev,
@@ -15151,6 +15161,12 @@ rtl8125_rx_interrupt(struct net_device *dev,
                 } else {
                         struct sk_buff *skb;
                         int pkt_size;
+#ifdef CONFIG_R8125_VLAN
+			u32 opts2;
+#endif
+#ifdef ENABLE_RSS_SUPPORT
+			u16 rss_header_info;
+#endif
 
 process_pkt:
                         if (likely(!(dev->features & NETIF_F_RXFCS)))
@@ -15226,20 +15242,62 @@ process_pkt:
                         dma_sync_single_for_cpu(tp_to_dev(tp),
                                                 rx_buf_phy_addr, tp->rx_buf_sz,
                                                 DMA_FROM_DEVICE);
+			/* 
+			 * Modified from inline function: rtl8125_try_rx_copy 
+			 * by flippy "2022-10-04"
+			 */
+			if (pkt_size < rx_copybreak) {
+				/*
+				 * pkt_size is a positive integer, and rx_copybreak is zero, 
+				 * so the following code will not be executed
+				 */
+                		struct sk_buff *skb_cpy;
 
-                        if (rtl8125_try_rx_copy(tp, ring, &skb, pkt_size,
-                                                desc, tp->rx_buf_sz)) {
-                                ring->Rx_skbuff[entry] = NULL;
-                                dma_unmap_single(tp_to_dev(tp), rx_buf_phy_addr,
-                                                 tp->rx_buf_sz, DMA_FROM_DEVICE);
-                        } else {
-                                dma_sync_single_for_device(tp_to_dev(tp), rx_buf_phy_addr,
-                                                           tp->rx_buf_sz, DMA_FROM_DEVICE);
-                        }
+				skb_cpy = RTL_ALLOC_SKB_INTR(&tp->r8125napi[ring->index].napi, pkt_size + RTK_RX_ALIGN);
+				if (skb_cpy) {
+					u8 *data;
 
-#ifdef ENABLE_RSS_SUPPORT
-                        rtl8125_rx_hash(tp, (struct RxDescV3 *)desc, skb);
+					data = skb->data;
+					skb_reserve(skb_cpy, RTK_RX_ALIGN);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,37)
+					prefetch(data - RTK_RX_ALIGN);
 #endif
+					eth_copy_and_sum(skb_cpy, data, pkt_size, 0);
+					skb = skb_cpy;
+					rtl8125_mark_to_asic(tp, desc, tp->rx_buf_sz);
+				}
+
+				dma_sync_single_for_device(tp_to_dev(tp), rx_buf_phy_addr,
+							tp->rx_buf_sz, DMA_FROM_DEVICE);
+			} else {
+					ring->Rx_skbuff[entry] = NULL;
+					dma_unmap_single(tp_to_dev(tp), rx_buf_phy_addr,
+							tp->rx_buf_sz, DMA_FROM_DEVICE);
+			}
+
+			/* 
+			 * Modified from inline function: rtl8125_rx_hash
+			 * by flippy "2022-10-04"
+			 */
+#ifdef ENABLE_RSS_SUPPORT
+#define RXS_8125B_RSS_UDP BIT(9)
+#define RXS_8125_RSS_IPV4 BIT(10)
+#define RXS_8125_RSS_IPV6 BIT(12)
+#define RXS_8125_RSS_TCP BIT(13)
+#define RTL8125_RXS_RSS_L3_TYPE_MASK (RXS_8125_RSS_IPV4 | RXS_8125_RSS_IPV6)
+#define RTL8125_RXS_RSS_L4_TYPE_MASK (RXS_8125_RSS_TCP | RXS_8125B_RSS_UDP)
+			if (!(tp->dev->features & NETIF_F_RXHASH))
+				goto hash_done;
+
+			rss_header_info = le16_to_cpu(((struct RxDescV3 *)desc)->RxDescNormalDDWord2.HeaderInfo);
+			if (!(rss_header_info & RTL8125_RXS_RSS_L3_TYPE_MASK))
+				goto hash_done;
+
+			skb_set_hash(skb, le32_to_cpu(((struct RxDescV3 *)desc)->RxDescNormalDDWord2.RSSResult),
+				(RTL8125_RXS_RSS_L4_TYPE_MASK & rss_header_info) ?
+				PKT_HASH_TYPE_L4 : PKT_HASH_TYPE_L3);
+hash_done:
+#endif //ENABLE_RSS_SUPPORT
 
                         if (tp->cp_cmd & RxChkSum)
                                 rtl8125_rx_csum(tp, skb, desc);
@@ -15251,9 +15309,44 @@ process_pkt:
                         if (skb->pkt_type == PACKET_MULTICAST)
                                 RTLDEV->stats.multicast++;
 
-                        if (rtl8125_rx_vlan_skb(tp, desc, skb) < 0)
-                                rtl8125_rx_skb(tp, skb, ring_index);
+			/* Modified from inline function: rtl8125_rx_vlan_skb
+			 * by flippy "2022-10-04"
+			 */
+#ifdef CONFIG_R8125_VLAN
+			opts2 = le32_to_cpu(rtl8125_rx_desc_opts2(tp, desc));
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)
+			if (tp->vlgrp && (opts2 & RxVlanTag))
+				rtl8125_rx_hwaccel_skb(skb, tp->vlgrp, swab16(opts2 & 0xffff));
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(3,10,0)
+			if (opts2 & RxVlanTag)
+				__vlan_hwaccel_put_tag(skb, swab16(opts2 & 0xffff));
+#else
+			if (opts2 & RxVlanTag)
+				__vlan_hwaccel_put_tag(skb, htons(ETH_P_8021Q), swab16(opts2 & 0xffff));
+#endif
+			rtl8125_clear_rx_desc_opts2(tp, desc);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)
+	                goto receive_done;
+#endif
+#endif //CONFIG_R8125_VLAN
+       			/* Modified from inline function: rtl8125_rx_skb
+			 * by flippy "2022-10-04"
+			 */
+#ifdef CONFIG_R8125_NAPI
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)
+			netif_receive_skb(skb);
+#else
+			napi_gro_receive(&tp->r8125napi[ring_index].napi, skb);
+#endif
+#else
+			netif_rx(skb);
+#endif
 
+#ifdef CONFIG_R8125_VLAN
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)
+receive_done:
+#endif
+#endif
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4,11,0)
                         dev->last_rx = jiffies;
 #endif //LINUX_VERSION_CODE < KERNEL_VERSION(4,11,0)
