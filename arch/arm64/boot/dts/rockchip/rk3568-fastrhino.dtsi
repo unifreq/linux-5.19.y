@@ -26,7 +26,7 @@
 		pinctrl-0 = <&blue_led_pin>;
 
 		blue_led: blue-led {
-			label = "blue:timer";
+			label = "blue:working";
 			gpios = <&gpio0 RK_PC0 GPIO_ACTIVE_HIGH>;
 		 	linux,default-trigger = "timer";	
 		};
